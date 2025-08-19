@@ -15,18 +15,18 @@ Includes toggleable **visual bugs** to create testing challenges.
    ```kotlin
    eyes.apiKey = "YOUR_API_KEY"
 
-### Visual Challenges
-```markdown
+
 ## Visual Challenges
 
 In the Product List screen, tap the 🐞 icon to toggle intentional UI glitches:
 
+```markdown
 - Off-by-one cart badge  
 - Missing currency symbol  
 - Randomized padding  
 - Wrong button color  
 - Truncated product names  
-- Faint divider  
+- Faint divider
 ```
 
 ## Usage Flow
