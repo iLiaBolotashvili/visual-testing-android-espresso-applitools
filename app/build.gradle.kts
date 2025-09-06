@@ -36,12 +36,11 @@ android {
         jvmTarget = "1.8"
     }
 
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
+    buildFeatures { compose = true }
+
+    // Compose compiler for Kotlin 1.9.0
+    composeOptions { kotlinCompilerExtensionVersion = "1.5.1" }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -50,32 +49,32 @@ android {
 }
 
 dependencies {
-    // Core
+    // --- Core / Lifecycle ---
     implementation(libs.androidx.core.ktx)
-
-    // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-    // Activity / Compose
+    // --- Activity / Compose BOM ---
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
+    implementation(platform(libs.androidx.compose.bom)) // BOM controls Compose versions
 
-    // Compose UI
+    // --- Compose UI (no explicit versions; rely on BOM) ---
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.material.icons.extended)
 
-    // Navigation
+    // --- Navigation ---
     implementation(libs.androidx.navigation.compose)
 
-    // Applitools
+    // --- Applitools / Fragment ---
     androidTestImplementation(libs.eyes.android.espresso)
     implementation(libs.androidx.fragment)
 
-    // Testing
+    // --- Testing ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
