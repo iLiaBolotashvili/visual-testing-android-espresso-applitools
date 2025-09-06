@@ -7,25 +7,29 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.shop.data.Product
 import java.text.NumberFormat
 import java.util.Locale
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductListScreen(
     products: List<Product>,
+    cartItems: List<Product>,
     onAddToCart: (Product) -> Unit,
     onCartClick: () -> Unit,
-    cartCount: Int,
+    onProfileClick: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     var lastAdded by remember { mutableStateOf<String?>(null) }
@@ -42,10 +46,14 @@ fun ProductListScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Shop", style = MaterialTheme.typography.titleLarge) },
                 actions = {
+                    IconButton(onClick = onProfileClick) {
+                        Icon(Icons.Filled.AccountCircle, contentDescription = "Profile")
+                    }
                     BadgedBox(
                         modifier = Modifier.padding(end = 10.dp),
                         badge = {
-                            if (cartCount > 0) Badge { Text(cartCount.coerceAtMost(99).toString()) }
+                            val count = cartItems.size
+                            if (count > 0) Badge { Text(count.coerceAtMost(99).toString()) }
                         }
                     ) {
                         IconButton(onClick = onCartClick) {
@@ -63,8 +71,11 @@ fun ProductListScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(products, key = { it.id }) { product ->
+                val isInCart = cartItems.any { it.id == product.id }
+
                 ProductItemCard(
                     product = product,
+                    isInCart = isInCart,
                     onAdd = {
                         onAddToCart(product)
                         lastAdded = product.name
@@ -78,10 +89,17 @@ fun ProductListScreen(
 @Composable
 private fun ProductItemCard(
     product: Product,
+    isInCart: Boolean,
     onAdd: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var added by remember { mutableStateOf(false) }
+    var showAddedChip by remember { mutableStateOf(false) }
+    LaunchedEffect(showAddedChip) {
+        if (showAddedChip) {
+            delay(1500)
+            showAddedChip = false
+        }
+    }
 
     ElevatedCard(
         modifier = modifier.fillMaxWidth(),
@@ -106,28 +124,27 @@ private fun ProductItemCard(
                 )
             }
 
-            Column(horizontalAlignment = Alignment.End) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AnimatedVisibility(visible = showAddedChip, enter = fadeIn(), exit = fadeOut()) {
+                    AssistChip(
+                        onClick = { showAddedChip = false },
+                        label = { Text("Added") },
+                        leadingIcon = { Icon(Icons.Default.Check, contentDescription = null) }
+                    )
+                }
+
+                if (showAddedChip) Spacer(Modifier.width(8.dp))
+
                 Button(
                     onClick = {
                         onAdd()
-                        added = true
+                        showAddedChip = true
                     },
+                    enabled = !isInCart,
+                    modifier = Modifier.testTag("add_${product.id}"),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    Text("Add")
-                }
-
-                AnimatedVisibility(
-                    visible = added,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    AssistChip(
-                        onClick = { added = false },
-                        label = { Text("Added!") },
-                        leadingIcon = { Icon(Icons.Default.Check, contentDescription = null) },
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                    Text(if (isInCart) "In Cart" else "Add")
                 }
             }
         }
