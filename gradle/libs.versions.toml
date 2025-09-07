@@ -1,6 +1,7 @@
 [versions]
 # Build tools
 agp = "8.5.2"
+coilCompose = "2.7.0"
 kotlin = "1.9.0"
 
 # Compose: use an SDK 34–friendly BOM (maps to ~1.6.x artifacts)
@@ -57,6 +58,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
 
 # Testing
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
