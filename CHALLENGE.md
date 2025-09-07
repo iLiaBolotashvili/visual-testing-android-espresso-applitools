@@ -44,6 +44,8 @@ login.toggleBugs(on = true)
 
 Always show details
 
+In Applitools dashboard ignore glitch toggle button.
+
 Leave everything else the same.
 
 Expected: Eyes highlights visual diffs (colors, spacing, elevation, etc.).

@@ -21,7 +21,7 @@ import com.applitools.eyes.android.espresso.fluent.Target
 open class BaseTest {
 
     companion object {
-        private val sharedBatch = BatchInfo("My Dear Tests")
+        private val sharedBatch = BatchInfo("my first test batch")
     }
 
     @get:Rule
@@ -35,7 +35,7 @@ open class BaseTest {
     @Before
     open fun setUp() {
         eyes = Eyes().apply {
-            apiKey = "XHZb3cDOhIBPMlCPe4P101igz1Wc108of2cptDG0moJfV3c110"
+            apiKey = "YOUR_API_KEY"
             configuration = Configuration().apply {
                 appName = "Shop Demo"
                 baselineEnvName = "${Build.MANUFACTURER}_${Build.MODEL}_API_${Build.VERSION.SDK_INT}".replace(" ", "_")
