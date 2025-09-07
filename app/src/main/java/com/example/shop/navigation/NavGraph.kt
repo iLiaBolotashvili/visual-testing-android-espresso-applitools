@@ -157,7 +157,8 @@ fun ShopNavGraph(navController: NavHostController) {
             CartScreen(
                 cartItems = cart,
                 onBack = { navController.popBackStack() },
-                onCheckout = { navController.navigate(Screen.Checkout.route) }
+                onCheckout = { navController.navigate(Screen.Checkout.route) },
+                onRemove = { product -> cart.remove(product) }
             )
         }
 

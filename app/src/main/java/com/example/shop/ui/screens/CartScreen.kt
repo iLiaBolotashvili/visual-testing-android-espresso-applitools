@@ -1,24 +1,38 @@
 package com.example.shop.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.shop.data.Product
 import java.text.NumberFormat
 import java.util.Locale
@@ -29,28 +43,18 @@ import kotlin.math.max
 fun CartScreen(
     cartItems: List<Product>,
     onBack: () -> Unit,
-    onCheckout: () -> Unit
+    onCheckout: () -> Unit,
+    onRemove: (Product) -> Unit
 ) {
     val subtotal = cartItems.sumOf { it.price }
     val tax = subtotal * 0.10
-    val shipping = if (subtotal >= 100.0) 0.0 else if (subtotal == 0.0) 0.0 else 4.99
+    val shipping = if (subtotal == 0.0 || subtotal >= 100.0) 0.0 else 4.99
     val total = subtotal + tax + shipping
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Your Cart", style = MaterialTheme.typography.titleLarge)
-                        if (cartItems.isNotEmpty()) {
-                            Text(
-                                "${cartItems.size} item${if (cartItems.size == 1) "" else "s"}",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                },
+            TopAppBar(
+                title = { Text("Your Cart") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -60,18 +64,15 @@ fun CartScreen(
         },
         bottomBar = {
             Surface(tonalElevation = 3.dp) {
-                Column(
-                    Modifier
+                Row(
+                    modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Total", style = MaterialTheme.typography.titleMedium)
+                    Column(Modifier.weight(1f)) {
+                        Text("Total", style = MaterialTheme.typography.labelLarge)
                         Text(
                             total.money(),
                             style = MaterialTheme.typography.titleLarge,
@@ -81,10 +82,9 @@ fun CartScreen(
                     Button(
                         onClick = onCheckout,
                         enabled = cartItems.isNotEmpty(),
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(vertical = 14.dp)
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
                     ) {
-                        Text("Proceed to checkout")
+                        Text("Checkout")
                     }
                 }
             }
@@ -99,7 +99,7 @@ fun CartScreen(
             )
         } else {
             Column(
-                Modifier
+                modifier = Modifier
                     .padding(padding)
                     .fillMaxSize()
             ) {
@@ -109,29 +109,30 @@ fun CartScreen(
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(cartItems) { item -> CartItemCard(item) }
+                    items(cartItems, key = { it.id }) { item ->
+                        CartItemRow(item = item, onRemove = onRemove)
+                    }
                 }
 
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
-                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         SummaryRow("Subtotal", subtotal.money())
                         SummaryRow("Tax (10%)", tax.money())
                         SummaryRow("Shipping", if (shipping == 0.0) "Free" else shipping.money())
-
-                        Divider(Modifier.padding(top = 4.dp))
-
+                        HorizontalDivider(
+                            thickness = DividerDefaults.Thickness,
+                            color = DividerDefaults.color
+                        )
                         Row(
-                            Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -179,40 +180,28 @@ private fun EmptyCartState(modifier: Modifier = Modifier, onBrowse: () -> Unit) 
 }
 
 @Composable
-private fun CartItemCard(item: Product) {
+private fun CartItemRow(
+    item: Product,
+    onRemove: (Product) -> Unit
+) {
     ElevatedCard(
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
+            AsyncImage(
+                model = item.imageUrl,
+                contentDescription = item.name,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(64.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                            ),
-                            tileMode = TileMode.Clamp
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                )
-            }
+            )
 
             Spacer(Modifier.width(12.dp))
 
@@ -227,13 +216,32 @@ private fun CartItemCard(item: Product) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
+                    item.brand,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
                     item.price.money(),
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            AssistChip(onClick = {}, label = { Text("x1") }, enabled = false)
+            FilledTonalIconButton(
+                onClick = { onRemove(item) },
+                modifier = Modifier.size(36.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = "Remove item"
+                )
+            }
         }
     }
 }
