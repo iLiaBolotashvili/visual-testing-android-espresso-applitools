@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.shop.ui.glitch.LocalGlitch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,6 +25,8 @@ fun ProfileScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val glitch = LocalGlitch.current
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -52,7 +55,6 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Avatar
             Box(
                 modifier = Modifier
                     .size(96.dp)
@@ -64,12 +66,17 @@ fun ProfileScreen(
                     imageVector = Icons.Filled.AccountCircle,
                     contentDescription = null,
                     modifier = Modifier.size(72.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    // BUG #1: avatar tint too low-contrast
+                    tint = if (glitch) MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.primary
                 )
             }
 
             Text(
                 text = email,
+                // BUG #2: email de-emphasized
+                color = if (glitch) MaterialTheme.colorScheme.onSurfaceVariant
+                else LocalContentColor.current,
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center
             )
@@ -80,7 +87,6 @@ fun ProfileScreen(
                 textAlign = TextAlign.Center
             )
 
-            // Account card
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
@@ -122,10 +128,17 @@ fun ProfileScreen(
             Button(
                 onClick = onLogout,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
-                ),
+                // BUG #3: wrong emphasis color for destructive action
+                colors = if (glitch)
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                else
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    ),
                 contentPadding = PaddingValues(vertical = 14.dp)
             ) {
                 Text("Log out")

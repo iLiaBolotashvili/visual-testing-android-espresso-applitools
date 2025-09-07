@@ -36,7 +36,9 @@ import androidx.compose.ui.input.key.type
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     validEmail: String = "demo@shop.com",
-    onSsoClick: (() -> Unit)? = null
+    onSsoClick: (() -> Unit)? = null,
+    glitchEnabled: Boolean,
+    onToggleGlitch: (Boolean) -> Unit
 ) {
     val focus = LocalFocusManager.current
     val scope = rememberCoroutineScope()
@@ -74,15 +76,35 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(bg)
-            .padding(20.dp)
+            .padding(horizontal = 20.dp, vertical = 20.dp)
     ) {
+        ExtendedFloatingActionButton(
+            onClick = { onToggleGlitch(!glitchEnabled) },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .testTag("toggle_glitch_fab"),
+            containerColor = if (glitchEnabled)
+                MaterialTheme.colorScheme.errorContainer
+            else
+                MaterialTheme.colorScheme.primaryContainer,
+            contentColor = if (glitchEnabled)
+                MaterialTheme.colorScheme.onErrorContainer
+            else
+                MaterialTheme.colorScheme.onPrimaryContainer
+        ) {
+            Text(if (glitchEnabled) "🐞 Visual Bugs: ON" else "🐞 Visual Bugs: OFF")
+        }
+
         Card(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth()
-                .widthIn(max = 520.dp),
+                .widthIn(max = 520.dp)
+                .padding(top = 24.dp),
             shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(6.dp),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = if (glitchEnabled) 0.dp else 6.dp
+            ), // BUG #1: card loses elevation (looks flat)
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
@@ -145,7 +167,7 @@ fun LoginScreen(
                     singleLine = true,
                     visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(if (glitchEnabled) 0.98f else 1f) // BUG #2: password field is narrower than email (ragged edge)
                         .onPreviewKeyEvent { event ->
                             if (event.type == KeyEventType.KeyUp &&
                                 event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER
@@ -167,8 +189,14 @@ fun LoginScreen(
                         Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
                         Text("Remember me")
                     }
-                    TextButton(onClick = { /* demo no-op */ }) {
-                        Text("Forgot password?")
+                    TextButton(onClick = { }) {
+                        Text(
+                            "Forgot password?",
+                            color = if (glitchEnabled)
+                                MaterialTheme.colorScheme.onSurfaceVariant // BUG #3: link is low-contrast; looks disabled
+                            else
+                                MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
 

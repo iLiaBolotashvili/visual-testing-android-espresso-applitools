@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +18,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.shop.data.Product
+import com.example.shop.ui.glitch.LocalGlitch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -27,6 +29,8 @@ fun CheckoutScreen(
     onPlaceOrder: () -> Unit,
     onBack: () -> Unit
 ) {
+    val glitch = LocalGlitch.current
+
     val subtotal = remember(cartItems) { cartItems.sumOf { it.price } }
     val shipping = if (subtotal > 0) 4.99 else 0.0
     val total = subtotal + shipping
@@ -89,7 +93,8 @@ fun CheckoutScreen(
                                     AsyncImage(
                                         model = item.imageUrl,
                                         contentDescription = item.name,
-                                        contentScale = ContentScale.Crop,
+                                        // BUG #1: slight distortion
+                                        contentScale = if (glitch) ContentScale.FillBounds else ContentScale.Crop,
                                         modifier = Modifier
                                             .size(44.dp)
                                             .clip(RoundedCornerShape(10.dp))
@@ -121,7 +126,14 @@ fun CheckoutScreen(
                             }
                         }
 
-                        Divider()
+                        // BUG #2: divider goes missing
+                        if (!glitch) {
+                            HorizontalDivider(
+                                Modifier,
+                                DividerDefaults.Thickness,
+                                DividerDefaults.color
+                            )
+                        }
 
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("Subtotal", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -132,8 +144,17 @@ fun CheckoutScreen(
                             Text(shipping.asMoney())
                         }
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Total", style = MaterialTheme.typography.titleSmall)
-                            Text(total.asMoney(), style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Total",
+                                // BUG #3: total looks less prominent
+                                style = if (glitch) MaterialTheme.typography.bodyLarge
+                                else MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                total.asMoney(),
+                                style = if (glitch) MaterialTheme.typography.titleSmall
+                                else MaterialTheme.typography.titleMedium
+                            )
                         }
                     }
                 }

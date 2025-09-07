@@ -22,10 +22,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.shop.data.Product
+import com.example.shop.ui.components.ShopTopBar
+import com.example.shop.ui.glitch.LocalGlitch
+import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.util.Locale
-import kotlinx.coroutines.delay
-import com.example.shop.ui.components.ShopTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +37,7 @@ fun ProductListScreen(
     onCartClick: () -> Unit,
     onProfileClick: () -> Unit,
 ) {
+    val glitch = LocalGlitch.current
     val snackbarHostState = remember { SnackbarHostState() }
     var lastAdded by remember { mutableStateOf<String?>(null) }
 
@@ -72,7 +74,8 @@ fun ProductListScreen(
                     onAdd = {
                         onAddToCart(product)
                         lastAdded = product.name
-                    }
+                    },
+                    glitch = glitch
                 )
             }
         }
@@ -85,6 +88,7 @@ private fun ProductItemCard(
     isInCart: Boolean,
     onAdd: () -> Unit,
     modifier: Modifier = Modifier,
+    glitch: Boolean = false
 ) {
     var showAddedChip by remember { mutableStateOf(false) }
     LaunchedEffect(showAddedChip) {
@@ -97,22 +101,24 @@ private fun ProductItemCard(
     ElevatedCard(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
-        shape = RoundedCornerShape(16.dp)
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = if (glitch) 1.dp else 3.dp
+        ), // BUG #1: card looks flatter (lowered elevation)
+        shape = RoundedCornerShape(if (glitch) 10.dp else 16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(if (glitch) 12.dp else 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 model = product.imageUrl,
                 contentDescription = product.name,
-                contentScale = ContentScale.Crop,
+                contentScale = if (glitch) ContentScale.FillBounds else ContentScale.Crop, // BUG #2: subtle image distortion
                 modifier = Modifier
                     .size(72.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(if (glitch) 10.dp else 12.dp))
             )
 
             Spacer(Modifier.width(12.dp))
@@ -152,7 +158,8 @@ private fun ProductItemCard(
                 Text(
                     product.price.asMoney(),
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.primary
+                    color = if (glitch) MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.primary // BUG #3: price loses emphasis (wrong color when ON)
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {

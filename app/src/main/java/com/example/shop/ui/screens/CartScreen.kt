@@ -8,24 +8,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DividerDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.shop.data.Product
+import com.example.shop.ui.glitch.LocalGlitch
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.max
@@ -48,6 +34,8 @@ fun CartScreen(
     onCheckout: () -> Unit,
     onRemove: (Product) -> Unit
 ) {
+    val glitch = LocalGlitch.current
+
     val subtotal = cartItems.sumOf { it.price }
     val tax = subtotal * 0.10
     val shipping = if (subtotal == 0.0 || subtotal >= 100.0) 0.0 else 4.99
@@ -82,8 +70,12 @@ fun CartScreen(
                         Text("Total", style = MaterialTheme.typography.labelLarge)
                         Text(
                             total.money(),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
+                            // BUG #3: total loses emphasis
+                            style = if (glitch) MaterialTheme.typography.titleMedium
+                            else MaterialTheme.typography.titleLarge,
+                            fontWeight = if (glitch) FontWeight.Medium else FontWeight.SemiBold,
+                            color = if (glitch) MaterialTheme.colorScheme.onSurfaceVariant
+                            else LocalContentColor.current
                         )
                     }
                     Button(
@@ -117,7 +109,7 @@ fun CartScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(cartItems, key = { it.id }) { item ->
-                        CartItemRow(item = item, onRemove = onRemove)
+                        CartItemRow(item = item, onRemove = onRemove, glitch = glitch)
                     }
                 }
 
@@ -189,7 +181,8 @@ private fun EmptyCartState(modifier: Modifier = Modifier, onBrowse: () -> Unit) 
 @Composable
 private fun CartItemRow(
     item: Product,
-    onRemove: (Product) -> Unit
+    onRemove: (Product) -> Unit,
+    glitch: Boolean
 ) {
     ElevatedCard(
         shape = RoundedCornerShape(16.dp),
@@ -204,7 +197,8 @@ private fun CartItemRow(
             AsyncImage(
                 model = item.imageUrl,
                 contentDescription = item.name,
-                contentScale = ContentScale.Crop,
+                // BUG #1: thumbnail slight distortion
+                contentScale = if (glitch) ContentScale.FillBounds else ContentScale.Crop,
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(12.dp))
@@ -231,8 +225,10 @@ private fun CartItemRow(
                 )
                 Text(
                     item.price.money(),
+                    // BUG #2: price de-emphasized
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.primary
+                    color = if (glitch) MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.primary
                 )
             }
 
