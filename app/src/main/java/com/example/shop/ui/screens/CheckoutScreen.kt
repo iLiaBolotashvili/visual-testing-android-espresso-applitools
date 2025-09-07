@@ -3,13 +3,22 @@ package com.example.shop.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.shop.data.Product
+import java.text.NumberFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,98 +36,164 @@ fun CheckoutScreen(
     var email by remember { mutableStateOf("") }
     var card by remember { mutableStateOf("") }
 
+    val canPlace = cartItems.isNotEmpty() && fullName.isNotBlank() && address.isNotBlank()
+
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("Checkout") },
                 navigationIcon = {
-                    TextButton(onClick = onBack) { Text("Back") }
-                }
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Order Summary", style = MaterialTheme.typography.titleMedium)
-            Divider()
 
-            if (cartItems.isEmpty()) {
-                Text("Your cart is empty.")
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f, fill = false),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(cartItems) { item ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(item.name)
-                            Text("$${"%.2f".format(item.price)}")
+                    Text("Order Summary", style = MaterialTheme.typography.titleMedium)
+
+                    if (cartItems.isEmpty()) {
+                        Text(
+                            "Your cart is empty.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        val preview = cartItems.take(3)
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            preview.forEach { item ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    AsyncImage(
+                                        model = item.imageUrl,
+                                        contentDescription = item.name,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                    )
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            item.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            maxLines = 1
+                                        )
+                                        Text(
+                                            item.brand,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1
+                                        )
+                                    }
+                                    Text(item.price.asMoney(), style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                            val extra = cartItems.size - preview.size
+                            if (extra > 0) {
+                                Text(
+                                    "+$extra more item${if (extra > 1) "s" else ""}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Divider()
+
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Subtotal", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(subtotal.asMoney())
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Shipping", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(shipping.asMoney())
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Total", style = MaterialTheme.typography.titleSmall)
+                            Text(total.asMoney(), style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 }
             }
 
-            Divider()
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Subtotal")
-                Text("$${"%.2f".format(subtotal)}")
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Shipping")
-                Text("$${"%.2f".format(shipping)}")
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Total", style = MaterialTheme.typography.titleMedium)
-                Text("$${"%.2f".format(total)}", style = MaterialTheme.typography.titleMedium)
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text("Shipping & Payment", style = MaterialTheme.typography.titleMedium)
+
+                    OutlinedTextField(
+                        value = fullName,
+                        onValueChange = { fullName = it },
+                        label = { Text("Full name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = address,
+                        onValueChange = { address = it },
+                        label = { Text("Address") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = card,
+                        onValueChange = { card = it },
+                        label = { Text("Card (**** **** **** 1234)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
             }
 
-            Divider()
-            Text("Shipping & Payment", style = MaterialTheme.typography.titleMedium)
-
-            OutlinedTextField(
-                value = fullName,
-                onValueChange = { fullName = it },
-                label = { Text("Full name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = address,
-                onValueChange = { address = it },
-                label = { Text("Address") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = card,
-                onValueChange = { card = it },
-                label = { Text("Card (**** **** **** 1234)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
+            Spacer(Modifier.weight(1f))
 
             Button(
                 onClick = onPlaceOrder,
-                enabled = cartItems.isNotEmpty() && fullName.isNotBlank() && address.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
+                enabled = canPlace,
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(vertical = 12.dp)
             ) {
                 Text("Place order")
             }
         }
     }
 }
+
+private fun Double.asMoney(): String =
+    NumberFormat.getCurrencyInstance(Locale.US).format(this)
