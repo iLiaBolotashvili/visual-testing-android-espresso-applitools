@@ -1,7 +1,7 @@
 # Shop Demo + Applitools Visual Testing
 
 Jetpack Compose demo app wired to **Applitools Eyes** (Espresso).  
-Includes a toggleable **🐞 Visual Bugs** button to create real‑world visual diffs for workshops.
+Includes a toggleable **🐞 Visual Bugs** button to create real‑world visual diffs.
 
 ---
 
@@ -74,7 +74,7 @@ class DemoApplication : Application(), ImageLoaderFactory {
     .build()
 }
 ```
-Manifest is already set with: `android:name=".DemoApplication"`.
+Manifest set with: `android:name=".DemoApplication"`.
 
 ---
 
