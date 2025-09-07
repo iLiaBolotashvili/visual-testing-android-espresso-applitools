@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -25,8 +26,6 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlinx.coroutines.delay
 import com.example.shop.ui.components.ShopTopBar
-
-private val AppBackground = androidx.compose.ui.graphics.Color(0xFFF9F9F9)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +47,7 @@ fun ProductListScreen(
     }
 
     Scaffold(
-        containerColor = AppBackground,
+        containerColor = Color.Transparent,
         topBar = {
             ShopTopBar(
                 title = "Shop",
