@@ -14,7 +14,7 @@ Make sure your Applitools API key is set in `BaseTest`.
 
 ## Your task
 
-Create a test named that does this flow using ONLY page methods + helpers:
+Create a test that does this flow using page methods + helpers:
 
 1) **Login (bugs OFF)**
     - Snapshot tag: `Login Page` (wait for: `Welcome back`)
@@ -42,8 +42,6 @@ Open the Applitools dashboard and **Approve** the baselines.
 Run the **same test** again, but at the very start call:
 login.toggleBugs(on = true)
 
-Always show details
-
 In Applitools dashboard ignore glitch toggle button.
 
 Leave everything else the same.
@@ -63,7 +61,6 @@ Expected: Eyes highlights visual diffs (colors, spacing, elevation, etc.).
 
 ## Win condition
 
-- One run (bugs OFF): **5 checkpoints** with clean baselines.
+- One run (bugs OFF): **5 checkpoints** with clean baselines, glitch toggle region ignored.
 - One run (bugs ON): the **same 5 checkpoints**, with **mismatches highlighted** in the dashboard.
 
-If your dashboard grouped both runs in the same batch, that’s fine — the diffs are what matter.
