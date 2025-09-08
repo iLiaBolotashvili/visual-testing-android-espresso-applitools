@@ -91,7 +91,7 @@ config.appName = "Shop Demo – ${System.currentTimeMillis()}"
 ## Dashboard Tips
 
 - Accept/Reject changes to update baselines.
-- Keep diffs from failing workshops (optional):
+- Keep diffs from failing tests.
 ```kotlin
 try { eyes.close() } catch (_: com.applitools.eyes.android.core.DiffsFoundException) {}
 ```
